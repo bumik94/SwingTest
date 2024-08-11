@@ -1,9 +1,12 @@
 package main;
 
 import javax.swing.*;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
@@ -12,6 +15,7 @@ class CalendarPanel extends JPanel implements ActionListener {
     private static final String LEFT_ARROW  = "<";
     private static final String RIGHT_ARROW = ">";
 
+    private final DateFormat df;
     private final Calendar calendar;
     private final ArrayList<JButton> CalendarButtons = new ArrayList<>();
 
@@ -21,6 +25,8 @@ class CalendarPanel extends JPanel implements ActionListener {
     private int currentYear;
 
     public CalendarPanel() {
+        // Initialize date formatter to the default locale
+        df = DateFormat.getDateInstance(DateFormat.SHORT);
         // Initialize and set Calendar
         this.calendar = Calendar.getInstance();
         this.calendar.setMinimalDaysInFirstWeek(1);
@@ -59,8 +65,8 @@ class CalendarPanel extends JPanel implements ActionListener {
      */
     private JPanel calendarHeader() {
         JPanel header = new JPanel(new GridBagLayout());
+        header.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
         GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(1, 1, 1, 1);
         JSeparator separator = new JSeparator(SwingConstants.HORIZONTAL);
 
         this.yearLabel = new JLabel();
@@ -86,6 +92,7 @@ class CalendarPanel extends JPanel implements ActionListener {
         nextMonth.addActionListener(this);
         nextMonth.setActionCommand("nextMonth");
 
+        c.insets = new Insets(1, 1, 1, 1);
         // Previous buttons column
         c.weightx = 0.0;
         c.anchor = GridBagConstraints.LINE_START;
@@ -107,7 +114,6 @@ class CalendarPanel extends JPanel implements ActionListener {
         c.gridy = 2; header.add(this.monthLabel, c);
 
         // Separator
-        c.insets = new Insets(1, 0, 0, 0);
         c.anchor = GridBagConstraints.CENTER;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.gridwidth = 3;
@@ -125,6 +131,7 @@ class CalendarPanel extends JPanel implements ActionListener {
      */
     private JPanel calendarGrid() {
         JPanel grid = new JPanel(new GridLayout(6, 7));
+//        grid.setBorder(BorderFactory.createLoweredBevelBorder());
         for (int i = 0; i < (6 * 7); i++) {
             JButton button = new JButton();
             button.setPreferredSize(new Dimension(50, 50));
@@ -232,7 +239,7 @@ public class Main {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(10, 10, 10, 10);
+        c.insets = new Insets(1, 1, 1, 1);
 
         // Lay out components and set visibility
         frame.add(new CalendarPanel(), c);

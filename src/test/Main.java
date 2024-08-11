@@ -1,54 +1,57 @@
 package test;
 
 import javax.swing.*;
+import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Locale;
+import java.text.DateFormat;
+import java.util.*;
+import java.util.List;
 
 class CalendarPanel extends JPanel implements ActionListener {
     private static final String LEFT_ARROW  = "<";
     private static final String RIGHT_ARROW = ">";
 
+    private final DateFormat df;
     private final Calendar calendar;
+    private final Calendar today;
     private final ArrayList<JButton> CalendarButtons = new ArrayList<>();
 
     private JLabel yearLabel;
     private JLabel monthLabel;
-    private int currentMonth;
     private int currentYear;
+    private int currentMonth;
 
     public CalendarPanel() {
+        // Initialize date format to the default locale
+        df = DateFormat.getDateInstance();  // DateFormat.SHORT
         // Initialize and set Calendar
         this.calendar = Calendar.getInstance();
         this.calendar.setMinimalDaysInFirstWeek(1);
-        // Get initial month and year
-        this.currentMonth = calendar.get(Calendar.MONTH);
+        // Get initial year and month
         this.currentYear = calendar.get(Calendar.YEAR);
+        this.currentMonth = calendar.get(Calendar.MONTH);
+        // Get Calendar instance to keep track of today
+        this.today = Calendar.getInstance();
         // Set layout manager
         this.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(1, 1, 1, 1);
+        c.insets = new Insets(10, 10, 10, 10);
 
         // Calendar header
-        c.anchor = GridBagConstraints.PAGE_START;
         c.gridx = 0;
         c.gridy = 0;
-        c.weightx = 1.0;
         c.fill = GridBagConstraints.HORIZONTAL;
         this.add(calendarHeader(), c);
 
         // Calendar grid cells
-        c.anchor = GridBagConstraints.PAGE_END;
         c.gridx = 0;
         c.gridy = 1;
-        c.weightx = 0.0;
         this.add(calendarGrid(), c);
 
         // Fill buttons with corresponding days for the current month
-        setComponentsText(getDaysOfMonthList());
+        setComponentsText(getDateList());
     }
 
     /**
@@ -61,15 +64,12 @@ class CalendarPanel extends JPanel implements ActionListener {
      */
     private JPanel calendarHeader() {
         JPanel header = new JPanel(new GridBagLayout());
+        header.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
         GridBagConstraints c = new GridBagConstraints();
-
         JSeparator separator = new JSeparator(SwingConstants.HORIZONTAL);
 
         this.yearLabel = new JLabel();
-//        this.yearLabel.setHorizontalAlignment(SwingConstants.CENTER);
-
         this.monthLabel = new JLabel();
-//        this.monthLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
         JButton prevYear = new JButton(LEFT_ARROW);
         prevYear.setPreferredSize(new Dimension(50, 25));
@@ -91,40 +91,34 @@ class CalendarPanel extends JPanel implements ActionListener {
         nextMonth.addActionListener(this);
         nextMonth.setActionCommand("nextMonth");
 
+        c.insets = new Insets(1, 1, 1, 1);
+
         // Previous buttons column
-        c.anchor = GridBagConstraints.LINE_START;
         c.weightx = 0.0;
+        c.anchor = GridBagConstraints.LINE_START;
         c.gridx = 0;
-        c.gridy = 0;
-        header.add(prevYear, c);
-        c.gridy = 2;
-        header.add(prevMonth, c);
+        c.gridy = 0; header.add(prevYear, c);
+        c.gridy = 2; header.add(prevMonth, c);
 
         // Next buttons column
         c.anchor = GridBagConstraints.LINE_END;
         c.gridx = 2;
-        c.gridy = 0;
-        header.add(nextYear, c);
-        c.gridy = 2;
-        header.add(nextMonth, c);
+        c.gridy = 0; header.add(nextYear, c);
+        c.gridy = 2; header.add(nextMonth, c);
 
         // Labels column
-        c.anchor = GridBagConstraints.CENTER;
         c.weightx = 1.0;
+        c.anchor = GridBagConstraints.CENTER;
         c.gridx = 1;
-        c.gridy = 0;
-        header.add(this.yearLabel, c);
-        c.gridy = 2;
-        header.add(this.monthLabel, c);
+        c.gridy = 0; header.add(this.yearLabel, c);
+        c.gridy = 2; header.add(this.monthLabel, c);
 
         // Separator
-        c.insets = new Insets(1, 0, 0, 0);
         c.anchor = GridBagConstraints.CENTER;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.gridwidth = 3;
         c.gridx = 0;
-        c.gridy = 1;
-        header.add(separator, c);
+        c.gridy = 1; header.add(separator, c);
 
         return header;
     }
@@ -137,6 +131,7 @@ class CalendarPanel extends JPanel implements ActionListener {
      */
     private JPanel calendarGrid() {
         JPanel grid = new JPanel(new GridLayout(6, 7));
+//        grid.setBorder(BorderFactory.createLoweredBevelBorder());
         for (int i = 0; i < (6 * 7); i++) {
             JButton button = new JButton();
             button.setPreferredSize(new Dimension(50, 50));
@@ -147,44 +142,59 @@ class CalendarPanel extends JPanel implements ActionListener {
     }
 
     /**
-     * Returns a list of days in the current month with overlaps to make full weeks.
+     * Creates a list of date strings in the current month with overlaps to make up full weeks.
      * Calendar is set to start on Monday of the first week of the month.
+     * This method is used as an argument for the 'setComponentsText' method.
      *
-     * @return  a list containing the days of the current month
-     *          with overlaps to other months to make up for a full week
+     * @return  a list containing formatted date strings
+     * <p>
+     * TODO: Create an array of Date objects that can be used to parse data from, like day for the calendar cell.
+     *       Save this array to the class instance and refer to it in conjunction with
+     *       respective button to call other methods in the future.
      */
-    public ArrayList<Integer> getDaysOfMonthList() {
-        ArrayList<Integer> list = new ArrayList<>();
+    private List<String> getDateList() {
+        ArrayList<String> list = new ArrayList<>();
         calendar.set(Calendar.WEEK_OF_MONTH, 1);
         calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
 
-        // Condition checks if isFullWeek is divisible by 7 and if the Calendar month is different
-        // from the currentMonth meaning that the end of month and week has been reached.
-        int isFullWeek = 0;
+        // Condition checks if the calendar has reached next month at the beginning of a new week
         do {
-            list.add(calendar.get(Calendar.DAY_OF_MONTH));
+            // Extract the date string for the current day and add it to the list
+            list.add(df.format(calendar.getTime()));
+            // Increment day of the calendar
             calendar.add(Calendar.DAY_OF_MONTH, 1);
-        } while (! (++isFullWeek % 7 == 0 && calendar.get(Calendar.MONTH) != currentMonth));
-
-        // Set calendar back to current month and year in case of overlap to next month/year
+        } while (! (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY &&
+                    calendar.get(Calendar.MONTH) != currentMonth));
+        // Set calendar back to current month and year in case of overlap to the next month/year
         calendar.set(Calendar.YEAR, currentYear);
         calendar.set(Calendar.MONTH, currentMonth);
-        return list;
+        return List.copyOf(list);
     }
 
     /**
-     * Sets the text of calendar buttons to each consecutive day from the daysOfMonth list.
+     * Sets the text of calendar buttons to each consecutive day from the 'dates' list.
      * When the list gets out of bounds, exception is caught and the respective button gets disabled and its text
      * field set to empty string.
      *
-     * @param daysOfMonth a list containing days of the current month with overlaps to make up a full week
+     * @param dates a list containing strings of date returned by the 'getDateList' method
+     * @throws ArrayIndexOutOfBoundsException raised when 'dates' list gets out of bounds
+     * <p>
+     * TODO: Use List of Date objects to parse days from and set each button to respective date.
+     *       The date will determine the cell color:
+     *                    - DARK_GREY   for different months from the current
+     *                    - LIGHT_GREY  for the current month
+     *                    - WHITE       for "today"
      */
-    public void setComponentsText(ArrayList<Integer> daysOfMonth) {
+    private void setComponentsText(List<String> dates) throws ArrayIndexOutOfBoundsException{
+        // Creates a Calendar instance to parse dates from daysOfMonth list
+        Calendar c = Calendar.getInstance();
         String yearName  = String.valueOf(calendar.get(Calendar.YEAR));
+        //noinspection MagicConstant
         String monthName = calendar.getDisplayName(
                 Calendar.MONTH,
                 Calendar.LONG_STANDALONE,
                 Locale.getDefault());
+
         // Set year label text to current year
         yearLabel.setText(yearName);
         // set month label text to current month
@@ -193,8 +203,13 @@ class CalendarPanel extends JPanel implements ActionListener {
         for (int i = 0; i < CalendarButtons.size(); i++) {
             JButton button = CalendarButtons.get(i);
             try {
-                button.setText(String.valueOf(daysOfMonth.get(i)));
+                String date = dates.get(i);
+                // set the local calendar with the date string
+                c.setTime(df.parse(date));
+                button.setText(String.valueOf(c.get(Calendar.DAY_OF_MONTH)));
                 button.setEnabled(true);
+                button.addActionListener(this);
+                button.setActionCommand(date);
             }
             catch (Exception ArrayIndexOutOfBoundsException) {
                 button.setText("");
@@ -213,14 +228,15 @@ class CalendarPanel extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         switch (e.getActionCommand()) {
-            case "prevYear"     -> { calendar.add(Calendar.YEAR,    -1); }
-            case "nextYear"     -> { calendar.add(Calendar.YEAR,    1); }
-            case "prevMonth"    -> { calendar.add(Calendar.MONTH,   -1); }
-            case "nextMonth"    -> { calendar.add(Calendar.MONTH,   1); }
+            case "prevYear"     -> calendar.add(Calendar.YEAR,    -1);
+            case "nextYear"     -> calendar.add(Calendar.YEAR,    1);
+            case "prevMonth"    -> calendar.add(Calendar.MONTH,   -1);
+            case "nextMonth"    -> calendar.add(Calendar.MONTH,   1);
+            default -> System.out.println(e.getActionCommand());
         }
         currentYear  =  calendar.get(Calendar.YEAR);
         currentMonth =  calendar.get(Calendar.MONTH);
-        setComponentsText(getDaysOfMonthList());
+        setComponentsText(getDateList());
     }
 }
 
@@ -232,10 +248,10 @@ public class Main {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(10, 10, 10, 10);
-//        frame.
-        frame.add(new CalendarPanel(), c);
+        c.insets = new Insets(1, 1, 1, 1);
+
         // Lay out components and set visibility
+        frame.add(new CalendarPanel(), c);
         frame.pack();
         frame.setVisible(true);
     }
@@ -243,10 +259,6 @@ public class Main {
     public static void main(String[] args) {
         //Schedule a job for the event-dispatching thread:
         //creating and showing this application's GUI.
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                createAndShowGUI();
-            }
-        });
+        SwingUtilities.invokeLater(Main::createAndShowGUI);
     }
 }
