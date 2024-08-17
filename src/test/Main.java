@@ -23,7 +23,7 @@ class CalendarPanel extends JPanel implements ActionListener {
     private int currentYear;
     private int currentMonth;
 
-    public CalendarPanel() {
+    public CalendarPanel(Calendar today) {
         // Initialize date format to the default locale
         df = DateFormat.getDateInstance();  // DateFormat.SHORT
         // Initialize and set Calendar
@@ -33,7 +33,7 @@ class CalendarPanel extends JPanel implements ActionListener {
         this.currentYear = calendar.get(Calendar.YEAR);
         this.currentMonth = calendar.get(Calendar.MONTH);
         // Get Calendar instance to keep track of today
-        this.today = Calendar.getInstance();
+        this.today = today;
         // Set layout manager
         this.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
@@ -114,6 +114,8 @@ class CalendarPanel extends JPanel implements ActionListener {
         c.gridy = 2; header.add(this.monthLabel, c);
 
         // Separator
+
+        c.insets = new Insets(1, 0, 1, 0);
         c.anchor = GridBagConstraints.CENTER;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.gridwidth = 3;
@@ -210,10 +212,22 @@ class CalendarPanel extends JPanel implements ActionListener {
                 button.setEnabled(true);
                 button.addActionListener(this);
                 button.setActionCommand(date);
+                if (today.get(Calendar.YEAR) == c.get(Calendar.YEAR) &&
+                    today.get(Calendar.MONTH) == c.get(Calendar.MONTH )&&
+                    today.get(Calendar.DAY_OF_MONTH) == c.get(Calendar.DAY_OF_MONTH)) {
+                    button.setBackground(Color.WHITE);
+                }
+                else if (currentMonth != c.get(Calendar.MONTH)) {
+                    button.setBackground(Color.GRAY);
+                }
+                else {
+                    button.setBackground(Color.LIGHT_GRAY);
+                }
             }
             catch (Exception ArrayIndexOutOfBoundsException) {
                 button.setText("");
                 button.setEnabled(false);
+                button.setBackground(null);
             }
         }
         this.revalidate();
@@ -251,7 +265,7 @@ public class Main {
         c.insets = new Insets(1, 1, 1, 1);
 
         // Lay out components and set visibility
-        frame.add(new CalendarPanel(), c);
+        frame.add(new CalendarPanel(Calendar.getInstance()), c);
         frame.pack();
         frame.setVisible(true);
     }
